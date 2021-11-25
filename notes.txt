@@ -1,0 +1,48 @@
+SELECT  Multiplexage d'entrées-sorties synchrones
+SOCKET  Créer un point de communication
+BIND    Fournir un nom à une socket
+LISTEN  Attendre des connexions sur une socket 
+ACCEPT  Accepter une connexion sur une socket
+RECV    Recevoir un message sur une socket
+SEND    Envoyer un message sur une socket
+
+int     select  (int nfds,      fd_set *readfds,    fd_set *writefds,   fd_set *exceptfds, struct timeval *timeout);
+int     socket  (int domain,    int type,           int protocol);
+int     bind    (int sockfd,    const struct sockaddr *addr,    socklen_t addrlen);
+int     listen  (int sockfd,    int backlog);
+int     accept  (int sockfd,    struct sockaddr *adresse,       socklen_t *longueur);
+ssize_t recv    (int s,         void *buf,      ssize_t len,    int flags);
+ssize_t send    (int s,         const void *buf,    size_t len, int flags);
+
+        Error   Success
+SELECT  -1      Nb de fd
+SOCKET  -1      sockfd
+BIND    -1      0
+LISTEN  -1      0
+ACCEPT  -1      sockfd
+RECV    -1      Nb d'octets lus (0 = fin de transmission)
+SEND    -1      Nb d'octets emis (0 = fin de transmission)
+
+void    FD_ZERO (fd_set *set);
+void    FD_SET  (int fd, fd_set *set);
+void    FD_CLR  (int fd, fd_set *set);
+int     FD_ISSET(int fd, fd_set *set);
+
+FD_ZERO     efface un ensemble.
+FD_SET      ajoute un descripteur de fichier dans un ensemble.
+FD_CLR      supprime un descripteur de fichier d'un ensemble.
+FD_ISSET    vérifie si un descripteur de fichier est contenu dans un ensemble
+            principalement utile après le retour de select().
+
+nc [-p source_port] [-s source_ip_address] [hostname] [port[s]]
+
+Created a listening TCP socket (socket, bind, listen), 
+mark it non-blocking with setsockopt,
+add it to the read-set for select.
+When it becomes "readable" it means you have client connection pending,
+call accept. 
+Add the new connected socket to the read-set too.
+You might want to keep a list/hash/whatever of these client sockets 
+since read-set has to be re-initialized before each call to select
+and to compute its first argument (max fd).
+

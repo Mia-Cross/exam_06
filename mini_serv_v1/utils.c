@@ -1,7 +1,48 @@
-#include <string.h>
-#include <stdio.h>
-#include <stdlib.h>
-#include <unistd.h>
+#include "mini_serv.h"
+
+void exit_fatal(char c)
+{
+	write(2, &c, 1);
+	write(2, ".Fatal error\n", 13);
+	exit(1);
+}
+
+int *add_fd_to_tab(int fd, int *tab)
+{
+	int i = 0;
+	for ( ; tab[i]; i++)
+		;
+	int *newtab = malloc(sizeof(int*) * (i + 1));
+	for (int j = 0; j < i; j++)
+		newtab[j] = tab[j];
+	newtab[i++] = fd;
+	newtab[i] = -42;
+	free(tab);
+	return (newtab);
+}
+
+fd_set tab_to_fd_set(int *tab)
+{
+	fd_set newset;
+	FD_ZERO(&newset);
+	print_current_set(tab);
+	for (int i = 0; tab[i] != -42; i++)
+		FD_SET(i, &newset);
+	return (newset);
+}
+
+int nb_len(int x) {
+	int len = 0;
+	while (x /= 10 && x > 0)
+		len++;
+	return len;
+}
+
+// void client_msg(const char *format, int client)
+// {
+// 	char *str = malloc(sizeof(char) * (strlen(format) - 1 + nb_len(client)));
+
+// }
 
 int extract_message(char **buf, char **msg)
 {

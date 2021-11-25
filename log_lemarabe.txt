@@ -1,0 +1,231 @@
+$$$$$$$$  $$$$        $$$$     $$$$
+   $$    $$  $$       $$  $$  $$  $$
+   $$    $$  $$  $$$  $$  $$  $$  $$
+   $$     $$$$        $$$$     $$$$  $$ $$ $$
+--------------------------------------------------------------------------
+
+
+
+
+$$$$$$  $$$$   $$  $$  $$$$   $$  $$    $$$    $$
+  $$   $$  $$  $$  $$  $$ $$  $$$ $$   $$ $$   $$
+$ $$   $$  $$  $$  $$  $$$    $$ $$$  $$$$$$$  $$
+$$$     $$$$    $$$$   $$ $$  $$  $$ $$     $$ $$$$$$
+--------------------------------------------------------------------------
+[19/7]
+1) J'ai fait ma fameuse refonte du parsing, ca marche tres tres bien et ca m'a
+permis de terminer la gestion des pages d'erreurs.
+--------------------------------------------------------------------------
+[13/7]
+- J'ai rajouté le parsing de max_body_size et error_page dans les locations
+    mais pour l'instant ca n'intervient pas vraiment dans le code en soit.
+- En cours -> renvoyer les bonnes pages d'erreur selon ce qui est spécifié
+    dans le conf file.
+    Super mauvaise idee de gerer les pages d'erreur comme je fais :
+    il faudrait construire le path absolu au moment ou on parse.
+        -> si on trouve une page d'erreur dans un bloc loc on l'associe a la
+    root de la loc
+        -> si on trouve une page sans instruction root on donne la root du serveur
+- En fait il faut bien differencier la location / des infos donnees hors des
+    locations donc --> Nouvelle idee pour pas m'embrouiller :
+        - Avant de parser les locations, je push une premiere par defaut sans path
+    qui contient toutes les infos donnees hors des blocs locations.
+        - Quand je parse les locations, si une info est absente je vais chercher
+    si elle est presente dans le bloc trimLocations, je la recupere.
+-> Comme ca je peux simplifier le constructeur de Location et les fonctions de 
+    parsing, y'aura plus besoin de server_conf, juste du premier maillon de la 
+    liste qui sera deja construit dans tous les cas. 
+--------------------------------------------------------------------------
+[09/7]
+J'ai a peu pres reussi a faire ce que je voulais, j'ai juste un souci avec
+    le CSS (la 2eme requete que fait le navigateur tout seul) : y'a un /
+    en trop au milieu mais ca marche quand meme.
+--------------------------------------------------------------------------
+[07/7]
+1) J'ai remanie les variables de PATH mais c'est un tel bordel !!! J'ai 
+    stocké dans Request plein de morceaux de path pour etre au clair sur
+    ce que je manipule. J'ai qques soucis avec le concept "object" qui
+    peut etre soit un dir soit un file, c'est un peu embetant pour la 
+    gestion des locations.  
+2) J'ai affiché du gloubiboulga en html sur le navigateur sans execve !!
+    -> bon en fait c'etait deja gere.
+3) Parsing du cgi_path -> on peut le donner en location, la je l'ai mis
+    dans location / pour qu'il soit utilisé a chaque fois (maintenant que
+    j'ai compris le delire du path qui etait pas bon....)
+4) Fait une fonction firstValidIndex qui return le nom du premier index valide
+    de la liste, elle juste pas encore implementee.
+>> Demain je me debarasse des variables superflues dans Server et je gere
+root comme une location, la j'en ai un peu marre.  
+--------------------------------------------------------------------------
+[05/7]
+1) parsing autoindex -> default off
+    - un bool dans Server
+	- un bool dans Location
+2) parsing index -> default "index.html"
+    - une list<string> dans Server
+    - une list<string> dans Location
+--> Je me demande si je continue a stocker dans Server les infos qui sont
+"libres" dans le bloc server{} (pas dans un bloc location{} en gros) ou si
+je crée une location "/" par defaut qui contient ces infos generales
+    - Si je fais ca faudra gerer les conflits si le bloc location / est
+    aussi defini et contient des infos contradictoires...
+3) check des locations :
+    - une fonction getRelevantLocation() qui return 1 seule Location
+    - une fonction getRelevantExtension() qui return 1 seule Location
+    - La je travaille sur une fonction setPathInfo() (en fait je sais pas
+vraiment si c'est la variable PATH_INFO du cgi que je veux construire
+ou PATH_TRANSLATED) qui fait appel aux 2 fonctions et qui check si la
+methode est autorisee. Elle est lancée depuis setPathQuery()
+--------------------------------------------------------------------------
+[23/6]
+    - Interrogations sur CONTENT_LENGTH qu'on doit set pour le CGI :
+D'apres la rfc3875 : "The server MUST set this meta-variable if and only
+if the request is accompanied by a message-body entity. The CONTENT_LENGTH
+value must reflect the length of the message-body after the server has 
+removed any transfer-codings or content-codings."
+-> du coup j'ai rajouté un if avant de set CONTENT_LENGTH, mais je me
+demande de quoi il parle quand il dit que notre serveur devrait enlever 
+des infos. Est ce qu'on doit le retoucher ou on envoie le header field ?
+    - Le nom d'un serveur par defaut doit il etre localhost ?
+--------------------------------------------------------------------------
+[21/6]
+    - Modification du fichier de conf pour que la racine du serveur soit
+maintenant /YoupiBanane
+    - J'ai pas mal bidouillé dans l'arborescence de fichiers du serveur
+(j'ai rien supprimé j'ai fait que des copies parce que je sais pas si ca
+peut faire perdre des trucs quand on va merge). Le prochain truc que je
+vais essayer de faire c'est de gerer les racines locales (location /Yeah)
+maintenant que j'ai...
+    - Enfin terminé ma fonction qui cherche les locations pertinentes !!
+C'est target qu'il fallait comparer, et pas path_info. Mais elle est pas 
+encore vraiment integree nulle part, elle est juste la...
+    - Rectification des _root dans Location : maintenant elles s'adaptent
+dynamiquement a la racine generale du serveur
+--------------------------------------------------------------------------
+[20/6]
+    - Getcwd pour remplacer le #define PATH
+    - Chdir avant execve !! Avant chaque requete je chdir pour me retrouver
+a la racine du serveur et execve est lancé depuis le bon path. Pour l'instant
+je chdir dans la fct setPathQuery(), c'est ptet pas le lieu le plus pertinent
+mais j'attend de voir une fois que j'aurais rajouté la gestion de root locales
+(la c'est que root general du serveur)
+/!\ Au debut j'etais pas sure qu'on ait le droit d'utiliser getcwd et chdir
+vu qu'elles sont pas dans la liste mais dans le sujet y'a ecrit 
+"the cgi should be run in the correct directory for relativ path file access"
+et je vois pas comment on pourrait faire ca sans mais bon...
+--------------------------------------------------------------------------
+[15/6]
+    - Parsing de root : je recupere la racine generale du serveur et aussi
+les racines dans les locations.
+--------------------------------------------------------------------------
+[11/6]
+    - Locations : avec le cerveau moins en bouillie aujourd'hui j'avais des
+idées concernant la marche a suivre donc je suis en train de parser/stocker
+les accepted_methods.
+    - Creation d'une classe Location comprenant le _path, la _conf et les
+_accepted_methods. Du coup les _routes c'est plus une map<str, str> mais
+une std::list<Location>. Mais j'ai pas fini la fonction de parsing...
+    - J'avais envie de faire un switch parce que c'est super gracieux je
+trouve, du coup je convertis les methodes en codes (0, 1, 2, 3 (mais c'est
+des define tkt)), pour l'instant il est ecrit mais commenté parce que je
+sais pas trop quelles sont les instructions a donner en fct de la methode. 
+--------------------------------------------------------------------------
+[10/6]
+    - Révision architecture : les fonctions de parsing sont passees dans
+parsing.cpp qui est accompagné de parsing.hpp contenant la definition de
+l'union IPA_t.
+    - Locations : j'arrive pas du tout a trouver de liste exhaustive des
+champs possibles donc ca me parait chaud et/ou inutile d'initialiser des
+champs dans une struct. Et en plus a priori on est censé pouvoir emboiter
+des locations dans des locations, donc faudrait que je revoie le parsing.
+Du coup j'imagine qu'on ne prend pas les champs "fastcgi_pass" ?? je
+comprend pas assez comment marche un cgi pour prendre une decision...
+--------------------------------------------------------------------------
+[8/06]
+    - Gestion des lignes commentées ok
+    - J'ai rajouté des exceptions dans le parsing (si il manque des infos,
+si les nombres donnés sont invalides, etc). Pour l'instant ca n'arrete pas
+le programme, juste le parsing du serveur en cours : si il y a une erreur
+dans le premier serveur, il va quand meme essayer de configurer le suivant,
+je sais pas si c'est la bonne facon de gerer.
+    - Parsing de l'adresse IP : je mets tout dans un union de ma creation
+(IPA_t) qui contient un unsigned char[4] et un unsigned int et vu qu'ils
+partagent la meme adresse, quand je demande le uint, il interprete les 4
+blocs comme une adresse IP sur 32 bits.
+    - Parsing des locations : pour l'instant j'ai utilisé la map<string,
+string> _routes que t'avais créé, je recupere le path concerné comme etant
+la clé et le scope des instructions comme etant le contenu.
+
+##########################################
+##          NOTES ON WEBSERV            ##
+##########################################
+
+"Because you won’t call the CGI directly use the full path as PATH_INFO"
+"the cgi should be run in the correct directory for relativ path file access"
+
+[X] choose the port and host of each "server"
+[X] setup the server_names or not
+[ ] The first server for a host:port will be the default for this host:port (meaning
+        it will answer to all request that doesn’t belong to an other server)
+[ ] setup default error pages
+[ ] limit client body size
+[ ] setup routes with one or multiple of the following rules/configuration (routes
+        wont be using regexp):
+    [X] -> define a list of accepted HTTP Methods for the route
+    [ ] -> define an HTTP redirection.
+    [X] -> define a directory or a file from where the file should be search (for example
+        if url /kapouet is rooted to /tmp/www, url /kapouet/pouic/toto/pouet is
+        /tmp/www/pouic/toto/pouet)
+    [X] -> turn on or off directory listing
+    [X] -> default file to answer if the request is a directory
+    [ ] -> execute CGI based on certain file extension (for example .php)
+        [ ] -> Because you won’t call the CGI directly, use the full path as PATH_INFO
+        [X] -> Just remembers that for chunked request, your server needs to unchunked it 
+            and the CGI will expect EOF as end of the body.
+        [ ] -> Same things for the output of the CGI. if no content_length is returned
+            from the CGI, EOF will mean the end of the returned data.
+        [ ] -> Your program should call the cgi with the file requested as first argument
+        [ ] -> the cgi should be run in the correct directory for relativ path file access
+        [ ] -> your server should work with one CGI (php-cgi, python...)
+    [ ] -> make the route able to accept uploaded files and configure where it should be saved
+
+--> [XSI] Structure used by kernel to store most addresses.
+    struct sockaddr {
+        __uint8_t       sa_len;         /* total length */
+        sa_family_t     sa_family;      /* [XSI] address family */
+        char            sa_data[14];    /* [XSI] addr value (actually larger) */
+    };
+--> Socket address, internet style.
+    struct sockaddr_in {
+        __uint8_t       sin_len;
+        sa_family_t     sin_family;
+        in_port_t       sin_port;
+        struct  in_addr sin_addr;    // == __uint32_t
+        char            sin_zero[8];
+    };
+--> Structure used to store a set of fd.
+    typedef struct fd_set {
+        __int32_t       fds_bits[__DARWIN_howmany(__DARWIN_FD_SETSIZE, __DARWIN_NFDBITS)];
+    } fd_set;
+
+
+FORMAT FOR HTTP REQUESTS
+    1) A Request-line
+        Method <space> Request-URI <space> HTTP-Version <CRLF>
+    2) Zero or more header fields (General|Request|Entity) followed by CRLF
+        Accept-Charset // Accept-Encoding // Accept-Language // Authorization // Expect //
+        From // Host // If-Match // If-Modified-Since // If-None-Match // If-Range //
+        If-Unmodified-Since // Max-Forwards // Proxy-Authorization // Range // Referer //
+        TE // User-Agent
+    3) An empty line indicating the end of the header fields (= nothing preceding CRLF) 
+    4) Optionally a message-body
+
+Replace memset by std::fill ? 
+Maybe don't initialize header fields and just accept any that is given. 
+
+
+Si erreur du type :
+    [webserv] ld: can't write to output file: webserv, errno=28 for architecture x86_64
+    clang: error: linker command failed with exit code 1 (use -v to see invocation)
+    make[2]: *** [webserv] Error 1
+>> chmod 777 Makefile

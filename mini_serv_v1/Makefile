@@ -1,9 +1,9 @@
 NAME = mini_serv
 
 COMPILER = clang
-CFLAGS = -Wall -Wextra -Werror
+CFLAGS = -Wall -Wextra -Werror -g -fsanitize=address
 
-SRCS =	mini_serv.c utils.c
+SRCS =	mini_serv.c select_loop.c utils.c debug.c
 
 OBJDIR = .obj
 OBJS = $(addprefix $(OBJDIR)/, $(SRCS:.c=.o))
