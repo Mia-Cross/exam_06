@@ -2,26 +2,32 @@
 
 void do_something(int sockfd, t_client *cli, int* nb_clients)
 {
-	ssize_t	bytes_recv, bytes_sent;
+	ssize_t	bytes_recv = 1, bytes_sent;
     char    buf[101];
+	char	*msg;
 	(void)sockfd;
 
 	if (!cli)
 		exit_fatal('%');
-	bzero(buf, 101);
-	bytes_recv = recv(cli->socket, (void*)buf, 100, 0);
-	ft_putnbr(bytes_recv);
-	if (bytes_recv == -1 && errno != EAGAIN)
-		exit_fatal('?');
-	else if (bytes_recv == 0)
-		client_action("left\n", *(nb_clients--));	
-	else if (bytes_recv > 0)
+	while (bytes_recv > 0)
 	{
+		bzero(buf, 101);
+		bytes_recv = recv(cli->socket, (void*)buf, 100, 0);
+		msg = 
+		// ft_putnbr(bytes_recv);
+		// if (bytes_recv == -1 && errno != EAGAIN)
+		// 	exit_fatal('?');
 		write(1, " --- ", 5);
 		write(1, buf, bytes_recv);
 		write(1, "\n", 1);
-		bytes_sent = send(cli->socket, (void*)buf, bytes_recv, 0);
-		ft_putnbr(bytes_sent);
+		
+	}
+	bytes_sent = send(cli->socket, (void*)buf, bytes_recv, 0);
+	ft_putnbr(bytes_sent);
+	if (!bytes_recv)
+	{
+		(*nb_clients)--;
+		client_action(cli->socket, "left\n", cli->id);	
 	}
 }
 

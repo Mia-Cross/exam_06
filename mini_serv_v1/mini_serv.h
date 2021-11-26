@@ -26,7 +26,7 @@ void print_fd_set(char *name, fd_set *set, int max_socket);
 void print_current_set(int *tab);
 void ft_memcpy(void *src, void *dest, int size);
 void do_something(int sockfd, t_client *cli, int* nb_clients);
-void client_action(const char *action, int client);
 
 void add_client(t_client **list, int socket, int id);
 t_client *get_client(t_client *list, int socket);
+void client_action(int socket, const char *action, int client);

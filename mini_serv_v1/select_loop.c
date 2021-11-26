@@ -56,9 +56,9 @@ void	select_loop(int sockfd)
                     }
                     else if (i == connfd && FD_ISSET(i, &write_sockets))
                     {
-                        write(1, "--> lez go ", 11);
-                        ft_putnbr(connfd);
-                        write(1, " -->\n", 5);
+                        // write(1, "--> lez go ", 11);
+                        // ft_putnbr(connfd);
+                        // write(1, " -->\n", 5);
                         do_something(sockfd, get_client(list, connfd), &nb_clients);
                         FD_CLR(i, &current_sockets);
                         FD_CLR(i, &read_sockets);
