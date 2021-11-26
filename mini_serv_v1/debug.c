@@ -4,7 +4,7 @@ void print_fd_set(char *name, fd_set *set, int max_socket)
 {
     write(1, name, strlen(name));
     write(1, "_SET = [ ", 9);
-    for (int i = 0; i < max_socket; i++)
+    for (int i = 0; i < max_socket + 1; i++)
     {
         if (FD_ISSET(i, set))
         {

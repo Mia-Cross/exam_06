@@ -1,5 +1,59 @@
 #include "mini_serv.h"
 
+void do_something(int sockfd, t_client *cli, int* nb_clients)
+{
+	ssize_t	bytes_recv, bytes_sent;
+    char    buf[101];
+	(void)sockfd;
+
+	if (!cli)
+		exit_fatal('%');
+	bzero(buf, 101);
+	bytes_recv = recv(cli->socket, (void*)buf, 100, 0);
+	ft_putnbr(bytes_recv);
+	if (bytes_recv == -1 && errno != EAGAIN)
+		exit_fatal('?');
+	else if (bytes_recv == 0)
+		client_action("left\n", *(nb_clients--));	
+	else if (bytes_recv > 0)
+	{
+		write(1, " --- ", 5);
+		write(1, buf, bytes_recv);
+		write(1, "\n", 1);
+		bytes_sent = send(cli->socket, (void*)buf, bytes_recv, 0);
+		ft_putnbr(bytes_sent);
+	}
+}
+
+void add_client(t_client **list, int socket, int id)
+{
+	t_client *new_client = malloc(sizeof(t_client));
+	if (!new_client)
+		exit_fatal('M');
+	new_client->socket = socket;
+	new_client->id = id;
+	if (!*list)
+		*list = new_client;
+	else
+	{
+		while (*list && (*list)->next)
+			*list = (*list)->next;
+		(*list)->next = new_client;
+	}
+	client_action("arrived\n", id);
+}
+
+t_client *get_client(t_client *list, int socket)
+{
+	while (list)
+	{
+		if (list->socket == socket)
+			return (list);
+		list = list->next;
+	}
+	return (NULL);
+}
+
 int main(int ac, char **av)
 {
 	int 	sockfd, port;

@@ -38,11 +38,22 @@ int nb_len(int x) {
 	return len;
 }
 
-// void client_msg(const char *format, int client)
-// {
-// 	char *str = malloc(sizeof(char) * (strlen(format) - 1 + nb_len(client)));
+void client_action(const char *action, int client)
+{
+	write(1, "server: client ", 15);
+	ft_putnbr(client);
+	write(1, " just ", 6);
+	write(1, action, strlen(action));
+	// write(1, "\n", 1);
+}
 
-// }
+void ft_memcpy(void *src, void *dest, int size)
+{
+	unsigned char *s = src;
+	unsigned char *d = dest;
+	for (int i = 0; i < size; i++)
+		d[i] = s[i];
+}
 
 int extract_message(char **buf, char **msg)
 {
