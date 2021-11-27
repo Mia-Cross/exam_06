@@ -1,4 +1,6 @@
 #include <errno.h>
+#include <fcntl.h>
+
 #include <string.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -27,6 +29,11 @@ void print_current_set(int *tab);
 void ft_memcpy(void *src, void *dest, int size);
 void do_something(int sockfd, t_client *cli, int* nb_clients);
 
-void add_client(t_client **list, int socket, int id);
+t_client *add_client(t_client **list, int socket, int id);
 t_client *get_client(t_client *list, int socket);
-void client_action(int socket, const char *action, int client);
+void remove_client(t_client **list, int socket);
+void client_action(t_client *cli, const char *action, t_client *list, int sockfd);
+
+int read_message(t_client *cli, t_client *list, int sockfd);
+void send_to_all(int sockfd, char *buf, t_client *list, t_client *cli);
+

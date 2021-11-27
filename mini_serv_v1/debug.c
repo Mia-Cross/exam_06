@@ -15,16 +15,16 @@ void print_fd_set(char *name, fd_set *set, int max_socket)
     write(1, "]\n", 2);
 }
 
-void print_current_set(int *tab)
-{
-    write(1, "CURRENT_SET = [ ", 16);
-    for (int i = 0; tab[i] != -42; i++)
-    {
-        ft_putnbr(i);
-        write(1, ", ", 2);
-    }
-    write(1, "]\n", 2);
-}
+// void print_current_set(int *tab)
+// {
+//     write(1, "CURRENT_SET = [ ", 16);
+//     for (int i = 0; tab[i] != -42; i++)
+//     {
+//         ft_putnbr(i);
+//         write(1, ", ", 2);
+//     }
+//     write(1, "]\n", 2);
+// }
 
 void	ft_putnbr(int nb)
 {
