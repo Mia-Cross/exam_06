@@ -1,4 +1,5 @@
-
+		// if (bytes_recv == -1 && errno != EAGAIN)
+		// 	exit_fatal('?');
 
 void	select_loop(int sockfd)
 {

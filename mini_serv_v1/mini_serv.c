@@ -1,54 +1,74 @@
 #include "mini_serv.h"
 
-int read_message(t_client *cli, t_client *list, int sockfd)
+int read_from_master_socket(int sockfd, char **msg)
 {
 	ssize_t	bytes_recv = 1;
     char    buf[101];
-	char	*msg = NULL;
-	// int last;
 
-	if (!cli)
-		exit_fatal('%');
 	while (bytes_recv > 0)
 	{
 		bzero(buf, 101);
-		bytes_recv = recv(cli->socket, buf, 100, 0);
-		msg = str_join(msg, buf);
-		// if (bytes_recv == -1 && errno != EAGAIN)
-		// 	exit_fatal('?');		
+		bytes_recv = recv(sockfd, buf, 100, 0);
+		*msg = str_join(*msg, buf);
+		
 	}
-	write(1, "<", 1);
+	write(1, "Master received :", 17);
 	ft_putnbr(bytes_recv);
 	write(1, "|", 1);
-	send_to_all(sockfd, buf, list, cli);
 	return (bytes_recv);
 }
 
-void send_to_all(int sockfd, char *msg, t_client *list, t_client *cli)
+int read_from_client(int socket, char **msg, int author_id)
 {
-	int bytes_sent, last;
-	char *buf = malloc(strlen(msg) + 20);
+	ssize_t	bytes_recv = 1;
+    char    buf[101];
 
+	while (bytes_recv > 0)
+	{
+		bzero(buf, 101);
+		bytes_recv = recv(socket, buf, 100, 0);
+		*msg = str_join(*msg, buf);	
+	}
+	write(1, "Socket ", 7);
+	ft_putnbr(socket);
+	write(1, " received ", 10);
+	ft_putnbr(bytes_recv);
+	write(1, "|", 1);
+	if (*msg)
+		*msg = put_prefix(*msg, author_id);
+	return (bytes_recv);
+}
+
+char *put_prefix(char *msg, int author_id)
+{
+	char *buf = malloc(strlen(msg) + 20);
 	if (!buf)
 		exit_fatal('M');
 	bzero(buf, strlen(msg) + 20);
-	// ft_putnbr(cli->id);
-	last = sprintf(buf, "client %d: ", cli->id);
+	int last = sprintf(buf, "client %d: ", author_id);
 	strcpy(buf + last, msg);
-	// free(msg);
-	bytes_sent = send(cli->socket, buf, strlen(buf), 0);
-	bytes_sent = send(sockfd, buf, strlen(buf), 0);
-	write(1, ">", 1);
-	ft_putnbr(bytes_sent);
-	write(1, "|", 1);
-	recv(sockfd, buf, bytes_sent, 0);
+	free(msg);
+	return (buf);
+}
+
+// void send_to_all(t_client *list, char *msg, int socket, int author_id)
+void send_to_all(t_client *list, char *msg, int size)
+{
+	// int bytes_sent;
+
+	// bytes_sent = send(socket, msg, strlen(msg), 0);
+	// recv(sockfd, msg, bytes_sent, 0);
+	// recv(cli->socket, msg, bytes_sent, 0);
 	while (list)
 	{
-		if (list->socket != cli->socket)
-			send(list->socket, buf, bytes_sent, 0);
+		// if (list->id != author_id)
+		send(list->socket, msg, size, 0);
 		list = list->next;
 	}
-	free(buf);
+	write(1, "Sent ", 5);
+	ft_putnbr(size);
+	write(1, " to all|", 8);
+	free(msg);
 }
 
 int main(int ac, char **av)
@@ -93,42 +113,3 @@ int main(int ac, char **av)
 	
 	exit(0);
 }
-
-// void do_something(int sockfd, t_client *cli, int* nb_clients)
-// {
-// 	ssize_t	bytes_recv = 1, bytes_sent;
-//     char    buf[101];
-// 	char	*msg = NULL;
-// 	int last;
-// 	// (void)sockfd;
-
-// 	if (!cli)
-// 		exit_fatal('%');
-// 	while (bytes_recv > 0)
-// 	{
-// 		bzero(buf, 101);
-// 		bytes_recv = recv(cli->socket, buf, 100, 0);
-// 		printf("msg before = [%s]\n", msg);
-// 		printf("buf before = [%s]\n", buf);
-// 		msg = str_join(msg, buf);
-// 		printf("msg after = [%s]\n", msg);
-// 		write(1, "<", 1);
-// 		ft_putnbr(bytes_recv);
-// 		// if (bytes_recv == -1 && errno != EAGAIN)
-// 		// 	exit_fatal('?');		
-// 	}
-// 	if (bytes_recv < 0)
-// 	{
-// 		*nb_clients -= 1;
-// 		client_action(cli->socket, "left\n", cli->id);
-// 		return;
-// 	}
-// 	bzero(buf, 101);
-// 	last = sprintf(buf, "client %d: ", cli->id);
-// 	strcpy(buf + last, msg);
-// 	free(msg);
-// 	bytes_sent = send(cli->socket, buf, strlen(buf), 0);
-// 	bytes_sent = send(sockfd, buf, strlen(buf), 0);
-// 	write(1, ">", 1);
-// 	ft_putnbr(bytes_sent);
-// }

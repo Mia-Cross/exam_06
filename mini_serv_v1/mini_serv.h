@@ -34,6 +34,8 @@ t_client *get_client(t_client *list, int socket);
 void remove_client(t_client **list, int socket);
 void client_action(t_client *cli, const char *action, t_client *list, int sockfd);
 
-int read_message(t_client *cli, t_client *list, int sockfd);
-void send_to_all(int sockfd, char *buf, t_client *list, t_client *cli);
+int read_from_master_socket(int socket, char **msg);
+int read_from_client(int socket, char **msg, int author_id);
+void send_to_all(t_client *list, char *msg, int size);
 
+char *put_prefix(char *msg, int author_id);

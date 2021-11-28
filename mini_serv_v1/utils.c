@@ -11,16 +11,17 @@ void exit_fatal(char c)
 
 void client_action(t_client *cli, const char *action, t_client *list, int sockfd)
 {
-	char buf[50];
-	// char *buf = malloc(50);
+	// char buf[50];
+	char *buf = malloc(50);
 	int last;
+	(void)sockfd;
 
-	// if (!buf)
-	// 	exit_fatal('M');
+	if (!buf)
+		exit_fatal('M');
 	bzero(buf, 50);
 	last = sprintf(buf, "server: client %d just ", cli->id);
 	strcpy(buf + last, action);
-	send_to_all(sockfd, buf, list, cli);
+	send_to_all(list, buf, strlen(buf));
 }
 
 t_client *add_client(t_client **list, int socket, int id)
@@ -54,7 +55,6 @@ void remove_client(t_client **list, int socket)
 	if ((*list)->socket == socket)
 	{
 		t_client *to_del = *list;
-		printf("First: removing socket %d,target is %d\n", to_del->socket, socket);
 		*list = (*list)->next;
 		free(to_del);
 		write(1, "client--\n", 9);
@@ -67,7 +67,6 @@ void remove_client(t_client **list, int socket)
 	if (client->next && client->next->socket == socket)
 	{
 		t_client *to_del = client->next;
-		printf("Other: removing socket %d,target is %d\n", to_del->socket, socket);
 		client->next = client->next->next;
 		free(to_del);
 		write(1, "client--\n", 9);
@@ -132,41 +131,3 @@ char *str_join(char *buf, char *add)
 	strcat(newbuf, add);
 	return (newbuf);
 }
-// int *add_fd_to_tab(int fd, int *tab)
-// {
-// 	int i = 0;
-// 	for ( ; tab[i]; i++)
-// 		;
-// 	int *newtab = malloc(sizeof(int*) * (i + 1));
-// 	for (int j = 0; j < i; j++)
-// 		newtab[j] = tab[j];
-// 	newtab[i++] = fd;
-// 	newtab[i] = -42;
-// 	free(tab);
-// 	return (newtab);
-// }
-
-// fd_set tab_to_fd_set(int *tab)
-// {
-// 	fd_set newset;
-// 	FD_ZERO(&newset);
-// 	print_current_set(tab);
-// 	for (int i = 0; tab[i] != -42; i++)
-// 		FD_SET(i, &newset);
-// 	return (newset);
-// }
-
-// int nb_len(int x) {
-// 	int len = 0;
-// 	while (x /= 10 && x > 0)
-// 		len++;
-// 	return len;
-// }
-
-// void ft_memcpy(void *src, void *dest, int size)
-// {
-// 	unsigned char *s = src;
-// 	unsigned char *d = dest;
-// 	for (int i = 0; i < size; i++)
-// 		d[i] = s[i];
-// }
