@@ -1,3 +1,14 @@
+Problemes a regler :
+OK      afficher le message de client qui part apres son message
+OK      ne pas envoyer le message de nouveau client au nouveau client
+OK      ne pas envoyer le message de client qui part au client qui part
+OK      afficher "client %d:" devant toutes les lignes
+
+
+         INIT            AFTER 1        AFTER 2
+*str1 =  "A\nB\nC\0"     "B\nC\0"       "C\0"
+*str2 =  NULL            "A\n"          "B\n"
+
 SELECT  Multiplexage d'entrées-sorties synchrones
 SOCKET  Créer un point de communication
 BIND    Fournir un nom à une socket
@@ -35,14 +46,4 @@ FD_ISSET    vérifie si un descripteur de fichier est contenu dans un ensemble
             principalement utile après le retour de select().
 
 nc [-p source_port] [-s source_ip_address] [hostname] [port[s]]
-
-Created a listening TCP socket (socket, bind, listen), 
-mark it non-blocking with setsockopt,
-add it to the read-set for select.
-When it becomes "readable" it means you have client connection pending,
-call accept. 
-Add the new connected socket to the read-set too.
-You might want to keep a list/hash/whatever of these client sockets 
-since read-set has to be re-initialized before each call to select
-and to compute its first argument (max fd).
 

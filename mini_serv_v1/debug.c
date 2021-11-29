@@ -15,6 +15,32 @@ void print_fd_set(char *name, fd_set *set, int max_socket)
     write(1, "]\n", 2);
 }
 
+void print_bytes_recv(int author_id, ssize_t bytes_recv, ssize_t bytes_recv_total)
+{
+	write(1, "Client ", 7);
+	ft_putnbr(author_id);
+	write(1, " received ", 10);
+	ft_putnbr(bytes_recv_total);
+	write(1, ", returned ", 11);
+	ft_putnbr(bytes_recv);
+	write(1, "|", 1);
+}
+
+void display_cli_id(int connfd, int id)
+{
+	char buf[30];
+	// bzero(buf, 30);
+	int ret = sprintf(buf, "Hi mate, you are number %d !\n", id);
+	send(connfd, buf, ret, 0);
+}
+
+void print_writeable_socket(int socket)
+{
+	write(1, "Socket ", 7);
+	ft_putnbr(socket);
+	write(1, " became writable\n", 17);
+}
+
 // void print_current_set(int *tab)
 // {
 //     write(1, "CURRENT_SET = [ ", 16);

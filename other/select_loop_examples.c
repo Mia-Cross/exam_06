@@ -1,5 +1,15 @@
-		// if (bytes_recv == -1 && errno != EAGAIN)
-		// 	exit_fatal('?');
+// Created a listening TCP socket (socket, bind, listen), 
+// mark it non-blocking with setsockopt,
+// add it to the read-set for select.
+// When it becomes "readable" it means you have client connection pending,
+// call accept. 
+// Add the new connected socket to the read-set too.
+// You might want to keep a list/hash/whatever of these client sockets 
+// since read-set has to be re-initialized before each call to select
+// and to compute its first argument (max fd).
+
+// if (bytes_recv == -1 && errno != EAGAIN)
+// 	exit_fatal('?');
 
 void	select_loop(int sockfd)
 {

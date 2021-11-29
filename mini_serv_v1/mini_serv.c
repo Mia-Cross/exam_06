@@ -1,74 +1,70 @@
 #include "mini_serv.h"
 
-int read_from_master_socket(int sockfd, char **msg)
+void	handle_connections(int sockfd)
 {
-	ssize_t	bytes_recv = 1;
-    char    buf[101];
+	unsigned int        len;
+	int                 nb_fd, connfd, max_socket = sockfd, id = 0;
+    fd_set              read_sockets, write_sockets;
+	struct sockaddr_in  cli;
+    t_client            *list = NULL;
+    char                *msg = NULL;
 
-	while (bytes_recv > 0)
-	{
-		bzero(buf, 101);
-		bytes_recv = recv(sockfd, buf, 100, 0);
-		*msg = str_join(*msg, buf);
-		
-	}
-	write(1, "Master received :", 17);
-	ft_putnbr(bytes_recv);
-	write(1, "|", 1);
-	return (bytes_recv);
-}
+    while (1)
+    {
+        FD_ZERO(&read_sockets);
+        FD_ZERO(&write_sockets);
+        FD_SET(sockfd, &read_sockets);
+        FD_SET(sockfd, &write_sockets);
+        for (t_client *cli = list; cli; cli = cli->next)
+        {
+            FD_SET(cli->socket, &read_sockets);
+            FD_SET(cli->socket, &write_sockets);
+            if (cli->socket > max_socket)
+                max_socket = cli->socket;
+        }
+        // print_fd_set("READ", &read_sockets, max_socket);
+        // print_fd_set("WRITE", &write_sockets, max_socket);
+        nb_fd = select(max_socket + 1, &read_sockets, &write_sockets, NULL, NULL);
+        if (nb_fd < 0)
+            exit_fatal('>');
+        
+        //check if something happened on the server socket (incoming connexion)
+        if (FD_ISSET(sockfd, &read_sockets)) 
+        {
+            len = sizeof(cli);
+            connfd = accept(sockfd, (struct sockaddr *)&cli, &len);
+            if (connfd < 0)
+                exit_fatal('A');
+            else
+            {
+                t_client *new_client = add_client(&list, connfd, id++);
+                client_action(new_client, "arrived\n", list);
+            }
+			display_cli_id(connfd, id - 1);
+        }
 
-int read_from_client(int socket, char **msg, int author_id)
-{
-	ssize_t	bytes_recv = 1;
-    char    buf[101];
-
-	while (bytes_recv > 0)
-	{
-		bzero(buf, 101);
-		bytes_recv = recv(socket, buf, 100, 0);
-		*msg = str_join(*msg, buf);	
-	}
-	write(1, "Socket ", 7);
-	ft_putnbr(socket);
-	write(1, " received ", 10);
-	ft_putnbr(bytes_recv);
-	write(1, "|", 1);
-	if (*msg)
-		*msg = put_prefix(*msg, author_id);
-	return (bytes_recv);
-}
-
-char *put_prefix(char *msg, int author_id)
-{
-	char *buf = malloc(strlen(msg) + 20);
-	if (!buf)
-		exit_fatal('M');
-	bzero(buf, strlen(msg) + 20);
-	int last = sprintf(buf, "client %d: ", author_id);
-	strcpy(buf + last, msg);
-	free(msg);
-	return (buf);
-}
-
-// void send_to_all(t_client *list, char *msg, int socket, int author_id)
-void send_to_all(t_client *list, char *msg, int size)
-{
-	// int bytes_sent;
-
-	// bytes_sent = send(socket, msg, strlen(msg), 0);
-	// recv(sockfd, msg, bytes_sent, 0);
-	// recv(cli->socket, msg, bytes_sent, 0);
-	while (list)
-	{
-		// if (list->id != author_id)
-		send(list->socket, msg, size, 0);
-		list = list->next;
-	}
-	write(1, "Sent ", 5);
-	ft_putnbr(size);
-	write(1, " to all|", 8);
-	free(msg);
+        //check the other sockets for activity
+        for (t_client *cli = list; cli; cli = cli->next)
+        {
+            if (FD_ISSET(cli->socket, &read_sockets))
+            {
+                if (read_from_client(cli->socket, &msg, cli->id) == 0)
+                {
+                    send_to_all(list, &msg, -1);
+                    client_action(cli, "left\n", list);
+                    FD_CLR(cli->socket, &read_sockets);
+                    FD_CLR(cli->socket, &write_sockets);
+                    remove_client(&list, cli->socket);
+                    break;
+                }
+            }
+            if (FD_ISSET(cli->socket, &write_sockets) && msg)
+            {
+				print_writeable_socket(cli->socket);
+                send_to_all(list, &msg, cli->socket);
+            }
+        }
+    }
 }
 
 int main(int ac, char **av)
@@ -109,7 +105,7 @@ int main(int ac, char **av)
 	else
 		write(1, "Listen success..\n", 17);
 
-	select_loop(sockfd);
+	handle_connections(sockfd);
 	
 	exit(0);
 }
