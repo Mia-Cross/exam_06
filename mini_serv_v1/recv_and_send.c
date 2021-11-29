@@ -12,7 +12,7 @@ int read_from_client(int socket, char **msg, int author_id)
 	while (bytes_recv > 0)
 	{
 		bzero(buf, 101);
-		bytes_recv = recv(socket, buf, 100, 0);
+		bytes_recv = recv(socket, buf, 100, MSG_DONTWAIT);
 		bytes_recv_total += bytes_recv;
 		tmpmsg = str_join(tmpmsg, buf);	
 	}
@@ -22,19 +22,22 @@ int read_from_client(int socket, char **msg, int author_id)
 		buf = put_prefix(buf, author_id);
 		*msg = str_join(*msg, buf);
 	}
+	free(buf);
+	free(tmpmsg);
 	return (bytes_recv);
 }
 
-void send_to_all(t_client *list, char **msg, int author_socket)
+void send_to_all(int *cli_fd, int id, char **msg, int max)
 {
+	if (!*msg)
+		return;
 	write(1, "Sending ", 8);
 	ft_putnbr(strlen(*msg));
 	write(1, " to all|", 8);
-	while (list)
+	for (int i = 0; i < max; i++)
 	{
-		if (list->socket != author_socket)
-			send(list->socket, *msg, strlen(*msg), 0);
-		list = list->next;
+		if (cli_fd[i] && id != i)
+			send(cli_fd[i], *msg, strlen(*msg), 0);
 	}
 	free(*msg);
 	*msg = NULL;

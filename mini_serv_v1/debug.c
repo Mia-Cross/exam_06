@@ -29,15 +29,15 @@ void print_bytes_recv(int author_id, ssize_t bytes_recv, ssize_t bytes_recv_tota
 void display_cli_id(int connfd, int id)
 {
 	char buf[30];
-	// bzero(buf, 30);
+	bzero(buf, 30);
 	int ret = sprintf(buf, "Hi mate, you are number %d !\n", id);
 	send(connfd, buf, ret, 0);
 }
 
-void print_writeable_socket(int socket)
+void print_writeable_socket(int id)
 {
-	write(1, "Socket ", 7);
-	ft_putnbr(socket);
+	write(1, "Socket c-", 9);
+	ft_putnbr(id);
 	write(1, " became writable\n", 17);
 }
 

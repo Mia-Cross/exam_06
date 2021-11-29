@@ -21,7 +21,7 @@ char *put_prefix(char *msg, int author_id)
 	return (buf);
 }
 
-void client_action(t_client *cli, const char *action, t_client *list)
+void client_action(int *cli_fd, int id, const char *action, int max)
 {
 	char *buf = malloc(50);
 	int last;
@@ -29,72 +29,10 @@ void client_action(t_client *cli, const char *action, t_client *list)
 	if (!buf)
 		exit_fatal('M');
 	bzero(buf, 50);
-	last = sprintf(buf, "server: client %d just ", cli->id);
+	last = sprintf(buf, "server: client %d just ", id);
 	strcpy(buf + last, action);
-	send_to_all(list, &buf, cli->socket);
+	send_to_all(cli_fd, id , &buf, max);
 }
-
-t_client *add_client(t_client **list, int socket, int id)
-{
-	t_client *client = *list;
-	t_client *new_client = malloc(sizeof(t_client));
-
-	if (!new_client)
-		exit_fatal('M');
-	new_client->socket = socket;
-	new_client->id = id;
-	new_client->next = NULL;
-	if (!client)
-		*list = new_client;
-	else
-	{
-		while (client && client->next)
-			client = client->next;
-		client->next = new_client;
-	}
-    write(1, "client++\n", 9);
-	// fcntl(socket, F_SETFL, O_NONBLOCK);
-	return (new_client);
-}
-
-void remove_client(t_client **list, int socket)
-{
-	if (!list)
-		return;
-	if ((*list)->socket == socket)
-	{
-		t_client *to_del = *list;
-		*list = (*list)->next;
-		close(to_del->socket);
-		free(to_del);
-		write(1, "client--\n", 9);
-		return;
-	}
-	t_client *client = *list;
-
-	while (client->next && client->next->socket != socket)
-		;
-	if (client->next && client->next->socket == socket)
-	{
-		t_client *to_del = client->next;
-		client->next = client->next->next;
-		close(to_del->socket);
-		free(to_del);
-		write(1, "client--\n", 9);
-	}
-}
-
-t_client *get_client(t_client *list, int socket)
-{
-	while (list)
-	{
-		if (list->socket == socket)
-			return (list);
-		list = list->next;
-	}
-	return (NULL);
-}
-
 
 int extract_message(char **buf, char **msg)
 {
@@ -143,3 +81,64 @@ char *str_join(char *buf, char *add)
 	strcat(newbuf, add);
 	return (newbuf);
 }
+
+// t_client *add_client(t_client **list, int socket, int id)
+// {
+// 	t_client *client = *list;
+// 	t_client *new_client = malloc(sizeof(t_client));
+
+// 	if (!new_client)
+// 		exit_fatal('M');
+// 	new_client->socket = socket;
+// 	new_client->id = id;
+// 	new_client->next = NULL;
+// 	if (!client)
+// 		*list = new_client;
+// 	else
+// 	{
+// 		while (client && client->next)
+// 			client = client->next;
+// 		client->next = new_client;
+// 	}
+//     write(1, "client++\n", 9);
+// 	// fcntl(socket, F_SETFL, O_NONBLOCK);
+// 	return (new_client);
+// }
+
+// void remove_client(t_client **list, int socket)
+// {
+// 	if (!list)
+// 		return;
+// 	if ((*list)->socket == socket)
+// 	{
+// 		t_client *to_del = *list;
+// 		*list = (*list)->next;
+// 		close(to_del->socket);
+// 		free(to_del);
+// 		write(1, "client--\n", 9);
+// 		return;
+// 	}
+// 	t_client *client = *list;
+
+// 	while (client->next && client->next->socket != socket)
+// 		;
+// 	if (client->next && client->next->socket == socket)
+// 	{
+// 		t_client *to_del = client->next;
+// 		client->next = client->next->next;
+// 		close(to_del->socket);
+// 		free(to_del);
+// 		write(1, "client--\n", 9);
+// 	}
+// }
+
+// t_client *get_client(t_client *list, int socket)
+// {
+// 	while (list)
+// 	{
+// 		if (cli_fd[i] == socket)
+// 			return (list);
+// 		list = list->next;
+// 	}
+// 	return (NULL);
+// }

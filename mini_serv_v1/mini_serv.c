@@ -1,4 +1,5 @@
 #include "mini_serv.h"
+#define MAX_CLI 32720
 
 void	handle_connections(int sockfd)
 {
@@ -6,21 +7,22 @@ void	handle_connections(int sockfd)
 	int                 nb_fd, connfd, max_socket = sockfd, id = 0;
     fd_set              read_sockets, write_sockets;
 	struct sockaddr_in  cli;
-    t_client            *list = NULL;
     char                *msg = NULL;
+    int                 cli_fd[MAX_CLI];
 
+    bzero(cli_fd, MAX_CLI);
     while (1)
     {
         FD_ZERO(&read_sockets);
         FD_ZERO(&write_sockets);
         FD_SET(sockfd, &read_sockets);
         FD_SET(sockfd, &write_sockets);
-        for (t_client *cli = list; cli; cli = cli->next)
+        for (int i = 0; i < id; i++)
         {
-            FD_SET(cli->socket, &read_sockets);
-            FD_SET(cli->socket, &write_sockets);
-            if (cli->socket > max_socket)
-                max_socket = cli->socket;
+            FD_SET(cli_fd[i], &read_sockets);
+            FD_SET(cli_fd[i], &write_sockets);
+            if (cli_fd[i] > max_socket)
+                max_socket = cli_fd[i];
         }
         // print_fd_set("READ", &read_sockets, max_socket);
         // print_fd_set("WRITE", &write_sockets, max_socket);
@@ -35,33 +37,32 @@ void	handle_connections(int sockfd)
             connfd = accept(sockfd, (struct sockaddr *)&cli, &len);
             if (connfd < 0)
                 exit_fatal('A');
-            else
-            {
-                t_client *new_client = add_client(&list, connfd, id++);
-                client_action(new_client, "arrived\n", list);
-            }
+            cli_fd[id++] = connfd;
+            client_action(cli_fd, id - 1, "arrived\n", id);
 			display_cli_id(connfd, id - 1);
         }
 
         //check the other sockets for activity
-        for (t_client *cli = list; cli; cli = cli->next)
+        for (int i = 0; i < id; i++)
         {
-            if (FD_ISSET(cli->socket, &read_sockets))
+            if (FD_ISSET(cli_fd[i], &read_sockets))
             {
-                if (read_from_client(cli->socket, &msg, cli->id) == 0)
+                if (read_from_client(cli_fd[i], &msg, i) == 0)// && msg)
                 {
-                    send_to_all(list, &msg, -1);
-                    client_action(cli, "left\n", list);
-                    FD_CLR(cli->socket, &read_sockets);
-                    FD_CLR(cli->socket, &write_sockets);
-                    remove_client(&list, cli->socket);
+                    send_to_all(cli_fd, i, &msg, 0);
+                    client_action(cli_fd, i, "left\n", id);
+                    FD_CLR(cli_fd[i], &read_sockets);
+                    FD_CLR(cli_fd[i], &write_sockets);
+                    close(cli_fd[i]);
+                    cli_fd[i] = 0;
+                    write(1, "client--\n", 9);
                     break;
                 }
             }
-            if (FD_ISSET(cli->socket, &write_sockets) && msg)
+            if (FD_ISSET(cli_fd[i], &write_sockets) && msg)
             {
-				print_writeable_socket(cli->socket);
-                send_to_all(list, &msg, cli->socket);
+				print_writeable_socket(i);
+                send_to_all(cli_fd, i, &msg, id);
             }
         }
     }
