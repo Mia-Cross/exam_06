@@ -1,7 +1,7 @@
 NAME = mini_serv
 
 COMPILER = clang
-CFLAGS = -Wall -Wextra -Werror -g #-fsanitize=address
+CFLAGS = -Wall -Wextra -Werror -g -fsanitize=address
 
 SRCS =	mini_serv.c recv_and_send.c utils.c debug.c
 

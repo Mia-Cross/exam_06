@@ -12,7 +12,7 @@ int read_from_client(int socket, char **msg, int author_id)
 	while (bytes_recv > 0)
 	{
 		bzero(buf, 101);
-		bytes_recv = recv(socket, buf, 100, MSG_DONTWAIT);
+		bytes_recv = recv(socket, buf, 100, 0);
 		bytes_recv_total += bytes_recv;
 		tmpmsg = str_join(tmpmsg, buf);	
 	}
@@ -21,6 +21,12 @@ int read_from_client(int socket, char **msg, int author_id)
 	{
 		buf = put_prefix(buf, author_id);
 		*msg = str_join(*msg, buf);
+	}
+	printf("tmpmsg = |%s|\n", tmpmsg);
+	if (tmpmsg && *tmpmsg != 0)
+	{
+		tmpmsg = put_prefix(tmpmsg, author_id);
+		*msg = str_join(*msg, tmpmsg);
 	}
 	free(buf);
 	free(tmpmsg);

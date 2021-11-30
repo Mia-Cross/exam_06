@@ -31,7 +31,7 @@ void client_action(int *cli_fd, int id, const char *action, int max)
 	bzero(buf, 50);
 	last = sprintf(buf, "server: client %d just ", id);
 	strcpy(buf + last, action);
-	send_to_all(cli_fd, id , &buf, max);
+	send_to_all(cli_fd, id, &buf, max);
 }
 
 int extract_message(char **buf, char **msg)

@@ -19,10 +19,13 @@ void	handle_connections(int sockfd)
         FD_SET(sockfd, &write_sockets);
         for (int i = 0; i < id; i++)
         {
-            FD_SET(cli_fd[i], &read_sockets);
-            FD_SET(cli_fd[i], &write_sockets);
-            if (cli_fd[i] > max_socket)
-                max_socket = cli_fd[i];
+            if (cli_fd[i] != 0)
+            {
+                FD_SET(cli_fd[i], &read_sockets);
+                FD_SET(cli_fd[i], &write_sockets);
+                if (cli_fd[i] > max_socket)
+                    max_socket = cli_fd[i];
+            }
         }
         // print_fd_set("READ", &read_sockets, max_socket);
         // print_fd_set("WRITE", &write_sockets, max_socket);
@@ -47,9 +50,9 @@ void	handle_connections(int sockfd)
         {
             if (FD_ISSET(cli_fd[i], &read_sockets))
             {
-                if (read_from_client(cli_fd[i], &msg, i) == 0)// && msg)
+                if (read_from_client(cli_fd[i], &msg, i) <= 0)
                 {
-                    send_to_all(cli_fd, i, &msg, 0);
+                    send_to_all(cli_fd, i, &msg, id);
                     client_action(cli_fd, i, "left\n", id);
                     FD_CLR(cli_fd[i], &read_sockets);
                     FD_CLR(cli_fd[i], &write_sockets);
