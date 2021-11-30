@@ -50,17 +50,15 @@ void	handle_connections(int sockfd)
         {
             if (FD_ISSET(cli_fd[i], &read_sockets))
             {
-                if (read_from_client(cli_fd[i], &msg, i) <= 0)
-                {
-                    send_to_all(cli_fd, i, &msg, id);
-                    client_action(cli_fd, i, "left\n", id);
-                    FD_CLR(cli_fd[i], &read_sockets);
-                    FD_CLR(cli_fd[i], &write_sockets);
-                    close(cli_fd[i]);
-                    cli_fd[i] = 0;
-                    write(1, "client--\n", 9);
-                    break;
-                }
+                read_from_client(cli_fd[i], &msg, i);
+                send_to_all(cli_fd, i, &msg, id);
+                client_action(cli_fd, i, "left\n", id);
+                FD_CLR(cli_fd[i], &read_sockets);
+                FD_CLR(cli_fd[i], &write_sockets);
+                close(cli_fd[i]);
+                cli_fd[i] = 0;
+                write(1, "client--\n", 9);
+                break;
             }
             if (FD_ISSET(cli_fd[i], &write_sockets) && msg)
             {

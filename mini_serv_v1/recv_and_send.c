@@ -22,7 +22,6 @@ int read_from_client(int socket, char **msg, int author_id)
 		buf = put_prefix(buf, author_id);
 		*msg = str_join(*msg, buf);
 	}
-	printf("tmpmsg = |%s|\n", tmpmsg);
 	if (tmpmsg && *tmpmsg != 0)
 	{
 		tmpmsg = put_prefix(tmpmsg, author_id);
