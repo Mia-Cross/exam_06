@@ -16,12 +16,16 @@ int read_from_client(int socket, char **msg, int author_id)
 		bytes_recv_total += bytes_recv;
 		tmpmsg = str_join(tmpmsg, buf);	
 	}
+	// printf("tmpmsg = |%s|\n, msg = |%s|\n", tmpmsg, *msg);
 	print_bytes_recv(author_id, bytes_recv, bytes_recv_total);
 	while (extract_message(&tmpmsg, &buf))
 	{
 		buf = put_prefix(buf, author_id);
 		*msg = str_join(*msg, buf);
 	}
+	if (*msg == NULL)
+		*msg = tmpmsg;
+	// printf("tmpmsg = |%s|\n, msg = |%s|\n", tmpmsg, *msg);
 	return (bytes_recv);
 }
 
