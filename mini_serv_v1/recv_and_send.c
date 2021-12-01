@@ -12,7 +12,7 @@ int read_from_client(int socket, char **msg, int author_id)
 	while (bytes_recv > 0)
 	{
 		bzero(buf, 101);
-		bytes_recv = recv(socket, buf, 100, 0);
+		bytes_recv = recv(socket, buf, 100, MSG_DONTWAIT);
 		bytes_recv_total += bytes_recv;
 		tmpmsg = str_join(tmpmsg, buf);	
 	}
