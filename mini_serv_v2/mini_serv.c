@@ -96,7 +96,7 @@ void client_action(int *cli, int id, char *action, int cli_max)
 	char *str = malloc(strlen(action) + strlen("client 2147483647 just ") + 1);
 	if (!str)
 		exit_error("Fatal error");
-	int last = sprintf(str, "client %d: ", id);
+	int last = sprintf(str, "client %d just ", id);
 	strcpy(str + last, action);
 	send_to_all(cli, id, &str, cli_max);
 }
@@ -124,30 +124,26 @@ int receive_message(int socket, char **msg, int id)
 	{
 		bzero(buf, 101);
 		bytes_recv = recv(socket, buf, 100, MSG_DONTWAIT);
-		// buf = put_prefix(buf, id);
 		tmpmsg = str_join(tmpmsg, buf);
 	}
-	printf("*msg = |%s|\n", *msg);
 	while (extract_message(&tmpmsg, &buf))
 	{
 		buf = put_prefix(buf, id);
 		*msg = str_join(*msg, buf);
 	}
 	free(buf);
-	printf("*msg = |%s|\n", *msg);
 	if (tmpmsg && *tmpmsg != 0)
 	{
 		tmpmsg = put_prefix(tmpmsg, id);
 		*msg = str_join(*msg, tmpmsg);
 	}
 	free(tmpmsg);
-	printf("*msg = |%s|\n", *msg);
 	return (bytes_recv);
 }
 
 int main(int ac, char **av)
 {
-	int sockfd, connfd, id = 0, max_socket = 0;
+	int sockfd, connfd, id = 0, max_socket;
 	unsigned int len;
 	struct sockaddr_in servaddr, cli;
 	int cli_fd[MAX_CLI];
@@ -182,19 +178,21 @@ int main(int ac, char **av)
 		FD_ZERO(&read_sockets);
 		FD_ZERO(&write_sockets);
 		FD_SET(sockfd, &read_sockets);
+		max_socket = sockfd;
 		for (int i = 0; i < id; i++)
 		{
 			if (cli_fd[i])
 			{
 				FD_SET(cli_fd[i], &read_sockets);
 				FD_SET(cli_fd[i], &write_sockets);
+				if (cli_fd[i] > max_socket)
+					max_socket = cli_fd[i];
 			}
 		}
 
 		if (select(max_socket + 1, &read_sockets, &write_sockets, NULL, NULL) == -1)
 			exit_error("Fatal error");
 
-		write(1, "gne", 3);
 		if (FD_ISSET(sockfd, &read_sockets))
 		{
 			len = sizeof(cli);
@@ -223,6 +221,7 @@ int main(int ac, char **av)
 			if (FD_ISSET(cli_fd[i], &write_sockets))
 				send_to_all(cli_fd, i, &msg, id);
 		}
+		system("leaks mini_serv");
 	}
 	
 	close(sockfd);
