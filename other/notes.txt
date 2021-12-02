@@ -4,11 +4,6 @@ OK      ne pas envoyer le message de nouveau client au nouveau client
 OK      ne pas envoyer le message de client qui part au client qui part
 OK      afficher "client %d:" devant toutes les lignes
 
-
-         INIT            AFTER 1        AFTER 2
-*str1 =  "A\nB\nC\0"     "B\nC\0"       "C\0"
-*str2 =  NULL            "A\n"          "B\n"
-
 SELECT  Multiplexage d'entrées-sorties synchrones
 SOCKET  Créer un point de communication
 BIND    Fournir un nom à une socket
@@ -46,4 +41,9 @@ FD_ISSET    vérifie si un descripteur de fichier est contenu dans un ensemble
             principalement utile après le retour de select().
 
 nc [-p source_port] [-s source_ip_address] [hostname] [port[s]]
+
+EXTRACT_MESSAGE(char **str1, char **str2)
+         INIT            AFTER 1        AFTER 2
+*str1 =  "A\nB\nC\0"     "B\nC\0"       "C\0"
+*str2 =  NULL            "A\n"          "B\n"
 

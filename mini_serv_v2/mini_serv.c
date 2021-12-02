@@ -19,9 +19,9 @@
 #include <sys/socket.h>
 #include <netinet/in.h>
 
-#define MAX_CLI 32000
+#define MAX_CLI 32720
 
-void display_cli_id(int connfd, int id);
+// void display_cli_id(int connfd, int id);
 
 void exit_error(char *error)
 {
@@ -201,7 +201,7 @@ int main(int ac, char **av)
 				exit_error("Fatal error");
 			cli_fd[id++] = connfd;
 			client_action(cli_fd, id - 1, "arrived\n", id);
-			display_cli_id(connfd, id - 1);
+			// display_cli_id(connfd, id - 1);
 		}
 
 		for (int i = 0; i < id; i++)
@@ -221,7 +221,7 @@ int main(int ac, char **av)
 			if (FD_ISSET(cli_fd[i], &write_sockets))
 				send_to_all(cli_fd, i, &msg, id);
 		}
-		system("leaks mini_serv");
+		// system("leaks mini_serv");
 	}
 	
 	close(sockfd);
